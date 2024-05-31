@@ -6,7 +6,7 @@
     "require-dev": {
         "phpunit/phpunit": "^11.1"
     },
-    "license": "Apache-2.0 license",
+    "license": "Apache-2.0",
     "autoload": {
         "psr-4": {
             "MifuminLib\\TgwsMark\\": "src/"

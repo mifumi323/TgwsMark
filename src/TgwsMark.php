@@ -1,6 +1,6 @@
 <?php
 
-namespace MifuminLib\TgwsMark;
+namespace Mifumi323\TgwsMark;
 
 class TgwsMark
 {

@@ -4,8 +4,9 @@ namespace Mifumi323\TgwsMark;
 
 class TgwsMark
 {
-    public static function toHtml(string $string, string $head = 'h2', string $headattr = ''): string
+    public static function toHtml(string $string, string $head = 'h2', string $headattr = '', ?callable $escape_function = null): string
     {
+        $escape_function ??= fn(string $value): string => $value;
         if (strlen($headattr) > 0) {
             $headattr = ' '.trim($headattr);
         }
@@ -61,7 +62,7 @@ class TgwsMark
                     $ret .= '</details>';
                     $detail_level = null;
                 }
-                $ret .= $next_tail.$raw_line.$raw_head;
+                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
                 if (preg_match('/#([\w-]+)$/', $second, $matches)) {
                     $hash = $matches[1];
@@ -79,7 +80,7 @@ class TgwsMark
                             $hash_link = '';
                             $hash_attr = '';
                         }
-                        $ret .= '<'.$h.$headattr.$hash_attr.$style.'>'.$second.$hash_link.'</'.$h.'>';
+                        $ret .= '<'.$h.$headattr.$hash_attr.$style.'>'.$escape_function($second).$hash_link.'</'.$h.'>';
                     } else {
                         // 折り畳み記法(開始)
                         $detail_level = $l ?? -1;
@@ -94,7 +95,7 @@ class TgwsMark
                                 $hash_link = '';
                                 $hash_attr = '';
                             }
-                            $ret .= '<summary'.$hash_attr.'>'.$second.$hash_link.'</summary>';
+                            $ret .= '<summary'.$hash_attr.'>'.$escape_function($second).$hash_link.'</summary>';
                         }
                     }
                 } else {
@@ -110,13 +111,13 @@ class TgwsMark
                 } elseif ($prev == '|') {
                     $ret .= '</table>';
                 }
-                $ret .= $next_tail.$raw_line.$raw_head;
+                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
                 if ($prev != '-') {
                     $ret .= '<ul'.$style.'>';
                 }
-                $ret .= '<li>'.$second.'</li>';
+                $ret .= '<li>'.$escape_function($second).'</li>';
                 $prev = '-';
             } elseif ($first == '+') {
                 // リスト
@@ -127,13 +128,13 @@ class TgwsMark
                 } elseif ($prev == '|') {
                     $ret .= '</table>';
                 }
-                $ret .= $next_tail.$raw_line.$raw_head;
+                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
                 if ($prev != '+') {
                     $ret .= '<ol'.$style.'>';
                 }
-                $ret .= '<li>'.$second.'</li>';
+                $ret .= '<li>'.$escape_function($second).'</li>';
                 $prev = '+';
             } elseif ($first == '|' && (str_ends_with($second, '|')||str_ends_with($second, '|h'))) {
                 // 表
@@ -144,7 +145,7 @@ class TgwsMark
                 } elseif ($prev == '+') {
                     $ret .= '</ol>';
                 }
-                $ret .= $next_tail.$raw_line.$raw_head;
+                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
                 if ($prev != '|') {
@@ -174,7 +175,7 @@ class TgwsMark
                     } else {
                         $tdargs = '';
                     }
-                    $ret .= '<'.$td.$tdargs.'>'.trim($cell).'</'.$td.'>';
+                    $ret .= '<'.$td.$escape_function($tdargs).'>'.$escape_function(trim($cell)).'</'.$td.'>';
                 }
                 $ret .= '</tr>';
                 if ($tablehead) {
@@ -194,7 +195,7 @@ class TgwsMark
                     $ret .= '</table>';
                 } else {
                 }
-                $ret .= $next_tail.$raw_line.$raw_head;
+                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
                 if ($prev == 'p') {
                 } elseif ($prev == '-') {
@@ -206,7 +207,7 @@ class TgwsMark
                 } else {
                     $ret .= '<p'.$style.'>';
                 }
-                $ret .= $line_content;
+                $ret .= $escape_function($line_content);
                 $prev = 'p';
             }
             if ($isblank) {
@@ -229,7 +230,7 @@ class TgwsMark
             // 折り畳み記法(終了)
             $ret .= '</details>';
         }
-        $ret .= $next_tail.$raw_line;
+        $ret .= $escape_function($next_tail.$raw_line);
 
         return $ret;
     }

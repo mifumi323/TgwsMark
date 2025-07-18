@@ -4,9 +4,23 @@ namespace Mifumi323\TgwsMark;
 
 class TgwsMark
 {
+    /**
+     * TgwsMark→HTML変換を行います。
+     *
+     * @param  string        $string          変換するTgwsMarkの文字列
+     * @param  string        $head            見出しのタグ名。デフォルトは 'h2'。
+     *                                        数字部分があると、見出しレベルに応じてh3, h4, ... と変化します。
+     * @param  string        $headattr        見出しのタグに追加する属性。デフォルトは空文字列。
+     *                                        例: 'class="my-class"'
+     *                                        属性値はエスケープされません。
+     * @param  callable|null $escape_function HTMLエスケープを行う関数。
+     *                                        nullだとエスケープしません。
+     *                                        例: htmlspecialchars(...)
+     * @return string        変換後のHTML文字列
+     */
     public static function toHtml(string $string, string $head = 'h2', string $headattr = '', ?callable $escape_function = null): string
     {
-        $escape_function ??= fn(string $value): string => $value;
+        $escape_function ??= fn (string $value): string => $value;
         if (strlen($headattr) > 0) {
             $headattr = ' '.trim($headattr);
         }
@@ -136,7 +150,7 @@ class TgwsMark
                 }
                 $ret .= '<li>'.$escape_function($second).'</li>';
                 $prev = '+';
-            } elseif ($first == '|' && (str_ends_with($second, '|')||str_ends_with($second, '|h'))) {
+            } elseif ($first == '|' && (str_ends_with($second, '|') || str_ends_with($second, '|h'))) {
                 // 表
                 if ($prev == 'p') {
                     $ret .= '</p>';

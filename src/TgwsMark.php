@@ -34,7 +34,7 @@ class TgwsMark
         $ret = '';
         $lines = self::splitByNewLine($string, false);
         $blankcount = 0;
-        $prev = '*';
+        $prev = LineType::Header;
         $next_tail = '';
         $raw_line = '';
         /** @var int|null $detail_level */
@@ -62,13 +62,13 @@ class TgwsMark
                         $l = null;
                     }
                 }
-                if ($prev == 'p') {
+                if ($prev == LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '-') {
+                } elseif ($prev == LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '+') {
+                } elseif ($prev == LineType::OrderedList) {
                     $ret .= '</ol>';
-                } elseif ($prev == '|') {
+                } elseif ($prev == LineType::Table) {
                     $ret .= '</table>';
                 }
                 if (isset($detail_level) && ((isset($l) && $l < $detail_level) || (strlen($second) > 0 && $second[0] === '>'))) {
@@ -115,54 +115,54 @@ class TgwsMark
                 } else {
                     $isblank = true;
                 }
-                $prev = '*';
+                $prev = LineType::Header;
             } elseif ($first == '-') {
                 // リスト
-                if ($prev == 'p') {
+                if ($prev == LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '+') {
+                } elseif ($prev == LineType::OrderedList) {
                     $ret .= '</ol>';
-                } elseif ($prev == '|') {
+                } elseif ($prev == LineType::Table) {
                     $ret .= '</table>';
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
-                if ($prev != '-') {
+                if ($prev != LineType::UnorderedList) {
                     $ret .= '<ul'.$style.'>';
                 }
                 $ret .= '<li>'.$escape_function($second).'</li>';
-                $prev = '-';
+                $prev = LineType::UnorderedList;
             } elseif ($first == '+') {
                 // リスト
-                if ($prev == 'p') {
+                if ($prev == LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '-') {
+                } elseif ($prev == LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '|') {
+                } elseif ($prev == LineType::Table) {
                     $ret .= '</table>';
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
-                if ($prev != '+') {
+                if ($prev != LineType::OrderedList) {
                     $ret .= '<ol'.$style.'>';
                 }
                 $ret .= '<li>'.$escape_function($second).'</li>';
-                $prev = '+';
+                $prev = LineType::OrderedList;
             } elseif ($first == '|' && (str_ends_with($second, '|') || str_ends_with($second, '|h'))) {
                 // 表
-                if ($prev == 'p') {
+                if ($prev == LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '-') {
+                } elseif ($prev == LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '+') {
+                } elseif ($prev == LineType::OrderedList) {
                     $ret .= '</ol>';
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
-                if ($prev != '|') {
+                if ($prev != LineType::Table) {
                     $ret .= '<table'.$style.'>';
                 }
                 $cells = explode('|', $second);
@@ -196,33 +196,33 @@ class TgwsMark
                     $ret .= '</thead>';
                 }
 
-                $prev = '|';
+                $prev = LineType::Table;
             } else {
                 // 通常の文章
-                if ($prev == 'p') {
+                if ($prev == LineType::Paragraph) {
                     $ret .= '<br>';
-                } elseif ($prev == '-') {
+                } elseif ($prev == LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '+') {
+                } elseif ($prev == LineType::OrderedList) {
                     $ret .= '</ol>';
-                } elseif ($prev == '|') {
+                } elseif ($prev == LineType::Table) {
                     $ret .= '</table>';
                 } else {
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
-                if ($prev == 'p') {
-                } elseif ($prev == '-') {
+                if ($prev == LineType::Paragraph) {
+                } elseif ($prev == LineType::UnorderedList) {
                     $ret .= '<p>';
-                } elseif ($prev == '+') {
+                } elseif ($prev == LineType::OrderedList) {
                     $ret .= '<p>';
-                } elseif ($prev == '|') {
+                } elseif ($prev == LineType::Table) {
                     $ret .= '<p>';
                 } else {
                     $ret .= '<p'.$style.'>';
                 }
                 $ret .= $escape_function($line_content);
-                $prev = 'p';
+                $prev = LineType::Paragraph;
             }
             if ($isblank) {
                 $blankcount++;
@@ -231,13 +231,13 @@ class TgwsMark
             }
             $next_tail = $raw_tail;
         }
-        if ($prev == 'p') {
+        if ($prev == LineType::Paragraph) {
             $ret .= '</p>';
-        } elseif ($prev == '-') {
+        } elseif ($prev == LineType::UnorderedList) {
             $ret .= '</ul>';
-        } elseif ($prev == '+') {
+        } elseif ($prev == LineType::OrderedList) {
             $ret .= '</ol>';
-        } elseif ($prev == '|') {
+        } elseif ($prev == LineType::Table) {
             $ret .= '</table>';
         }
         if (isset($detail_level)) {

@@ -98,6 +98,22 @@ echo $html;
 ```
 `$head`引数にhn以外のタグを指定すると、見出しレベルは無視されます。
 
+#### 見出しの属性
+```php
+$tgws_mark = <<<TGWSMARK
+*城ですな
+**そうなの？
+***多分ね
+TGWSMARK;
+$html = \Mifumi323\TgwsMark\TgwsMark::toHtml($tgws_mark, headattr: 'class="pkmn"');
+echo $html;
+```
+```html
+<h2 class="pkmn">城ですな</h2><h3 class="pkmn">そうなの？</h3><h4 class="pkmn">多分ね</h4>
+```
+`TgwsMark::toHtml`関数を呼び出す際に、`$headattr`引数を指定することで、属性を追加できます。
+見出しレベルに関わらず、同じ属性が付きます。
+
 #### 空見出し
 ```
 *
@@ -149,6 +165,36 @@ echo $html;
 `|`で囲んで区切ると、表になります。
 `|h`で終わる行は、表の見出し行になります。
 
+#### セル単位の見出し
+```
+|*きかん|ごおくねん|h
+|*ほうしゅう|ひゃくまんえん|
+```
+```html
+<table><thead><tr><th>きかん</th><th>ごおくねん</th></tr></thead><tr><th>ほうしゅう</th><td>ひゃくまんえん</td></tr></table>
+```
+`*`で始まるセルは見出しになります。
+
+#### セルの属性
+```
+|はこ|class="long">ながーい|
+|もちこ|class="soft">ふわふわ|
+```
+```html
+<table><tr><td>はこ</td><td class="long">ながーい</td></tr><tr><td>もちこ</td><td class="soft">ふわふわ</td></tr></table>
+```
+セル内の`>`までは属性として`td`/`th`タグに付与されます。
+
+#### 見出しと属性の同時適用
+```
+|*class="hot">おゆ|りょうが|
+|*class="cold">みず|ぴーちゃん|
+```
+```html
+<table><tr><th class="hot">おゆ</th><td>りょうが</td></tr><tr><th class="cold">みず</th><td>ぴーちゃん</td></tr></table>
+```
+見出しと属性を同時に使う場合、`*`を先に書きます。
+
 ### 折り畳み
 ```
 *>
@@ -196,6 +242,76 @@ echo $html;
 ```
 `>`の後に書いた文字列はsummary要素になります。
 見出しと同じく、`#`でURLフラグメントも生成します。
+
+### コードブロック
+````
+```
+int main(void){}
+```
+````
+```html
+<pre><code>
+int main(void){}
+</code></pre>
+```
+3つ以上のバッククォートでコードブロックを表せます。
+TgwsMark自体はハイライト機能を持ちませんが、[highlight.js](https://highlightjs.org/)でハイライトできるHTMLを出力します。
+
+#### コードブロックの言語指定
+````
+```c
+int main(void){}
+```
+````
+```html
+<pre><code class="language-c">
+int main(void){}
+</code></pre>
+```
+バッククォートの後に言語を書くことでハイライトのためのclassが付きます。
+
+#### コードブロックを含むコードブロック
+`````
+````markdown
+ここにシー言語
+```c
+int main(void){}
+```
+ここまでシー言語
+````
+`````
+````html
+<pre><code class="language-markdown">
+ここにシー言語
+```c
+int main(void){}
+```
+ここまでシー言語
+</code></pre>
+````
+コードブロックの終了は、開始時に使ったのと同じ数のバッククォートで反映されます。
+4つで始めれば4つのバッククォートまでになり、3つはコード内容とみなされます。
+
+#### コードブロックを含むコードブロック(逆パターン)
+`````
+```markdown
+ここにシー言語
+````c
+int main(void){}
+````
+ここまでシー言語
+```
+`````
+`````html
+<pre><code class="language-markdown">
+ここにシー言語
+````c
+int main(void){}
+````
+ここまでシー言語
+</code></pre>
+`````
+数が違えば入れ子にできるので、中身のバッククォートのほうが多くてもかまいません。
 
 ### 文法解釈のスキップ
 ```

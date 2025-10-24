@@ -9,4 +9,5 @@ enum LineType
     case UnorderedList;
     case OrderedList;
     case Table;
+    case CodeBlock;
 }

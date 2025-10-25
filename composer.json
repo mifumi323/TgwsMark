@@ -1,7 +1,6 @@
 {
     "name": "mifumi323/tgwsmark",
     "description": "テキストからHTMLにするアレ。",
-    "version": "2.0.0",
     "type": "library",
     "require-dev": {
         "phpunit/phpunit": "^11.1"

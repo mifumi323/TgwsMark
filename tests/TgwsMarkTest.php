@@ -80,6 +80,12 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
             ["*heading1\n**heading2", '<h2>heading1</h2><h3>heading2</h3>'],
             ["*heading1\n**heading2\n***heading3", '<h2>heading1</h2><h3>heading2</h3><h4>heading3</h4>'],
 
+            // テーブル
+            ['|*th|td|', '<table><tr><th>th</th><td>td</td></tr></table>'],
+            ['|style="text-align:center;">td|', '<table><tr><td style="text-align:center;">td</td></tr></table>'],
+            ['|*style="text-align:center;">th|', '<table><tr><th style="text-align:center;">th</th></tr></table>'],
+            ['|style="text-align:center;">*th|', '<table><tr><td style="text-align:center;">*th</td></tr></table>'], // *の指定は先に置かないと反映されない
+
             // 折り畳み
             ['*>', '<details></details>'],
             ['*>summary1', '<details><summary>summary1</summary></details>'],
@@ -99,6 +105,26 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
             ['*>折り畳み#tatami', '<details><summary id="tatami">折り畳み<a href="#tatami" class="hashlink" title="「折り畳み」の位置へのリンク">#</a></summary></details>'],
             ['*><b>折り畳み</b>#tatami', '<details><summary id="tatami"><b>折り畳み</b><a href="#tatami" class="hashlink" title="「折り畳み」の位置へのリンク">#</a></summary></details>'],
             ['*>#tatami', '<details></details>'], // リンク先となるsummaryがないためリンクも生成しない
+
+            // コードブロック
+            ["```\ncode line1\ncode line2\n```", "<pre><code>\ncode line1\ncode line2\n</code></pre>"],
+            ["line1\n```\ncode line2\ncode line3\n```\nline4", "<p>line1</p><pre><code>\ncode line2\ncode line3\n</code></pre><p>line4</p>"],
+            ["line1\n```\ncode line2\n\ncode line3\n```\nline4", "<p>line1</p><pre><code>\ncode line2\n\ncode line3\n</code></pre><p>line4</p>"],
+            ["```\ncode line1\ncode line2", "<pre><code>\ncode line1\ncode line2\n</code></pre>"], // 閉じられない場合
+            ["```markdown\n# Heading\nprint('Hello, World!')\n```", "<pre><code class=\"language-markdown\">\n# Heading\nprint('Hello, World!')\n</code></pre>"], // 言語指定あり
+            ["```:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code>\ncode line1\ncode line2\n</code></pre>"], // ファイル名指定
+            ["```php:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code class=\"language-php\">\ncode line1\ncode line2\n</code></pre>"], // 言語＋ファイル名指定
+            ["````\ncode line1\n```\ncode block in code block\n```\ncode line2\n````", "<pre><code>\ncode line1\n```\ncode block in code block\n```\ncode line2\n</code></pre>"], // ネスト
+            ["*>summary\n```\ncode line1\ncode line2\n```", "<details><summary>summary</summary><pre><code>\ncode line1\ncode line2\n</code></pre></details>"], // 折り畳み内コードブロック
+            ["```\ncode line1\n````\ncode block in code block\n````\ncode line2\n```", "<pre><code>\ncode line1\n````\ncode block in code block\n````\ncode line2\n</code></pre>"], // ネスト逆
+            ["*>summary\n```\ncode line1\ncode line2", "<details><summary>summary</summary><pre><code>\ncode line1\ncode line2\n</code></pre></details>"], // 折り畳み内コードブロック（閉じられない場合）
+            ["|table|\n```\ncode line1\ncode line2\n```", "<table><tr><td>table</td></tr></table><pre><code>\ncode line1\ncode line2\n</code></pre>"], // 表終了後にコードブロック開始
+            ["-list item\n```\ncode line1\ncode line2\n```", "<ul><li>list item</li></ul><pre><code>\ncode line1\ncode line2\n</code></pre>"], // リスト終了後にコードブロック開始
+            ["+list item\n```\ncode line1\ncode line2\n```", "<ol><li>list item</li></ol><pre><code>\ncode line1\ncode line2\n</code></pre>"], // 番号付きリスト終了後にコードブロック開始
+
+            // 改行コード
+            ["line1\r\nline2", '<p>line1<br>line2</p>'],
+            ["line1\rline2", '<p>line1<br>line2</p>'],
         ];
     }
 
@@ -121,6 +147,13 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
         // Hn以外は見出しレベルに対応しない
         $actual = TgwsMark::toHtml("*heading1\n**heading2", 'div');
         $expected = '<div>heading1</div><div>*heading2</div>';
+        Assert::assertSame($expected, $actual);
+    }
+
+    public function testToHtmlWithHeadWithAttributes()
+    {
+        $actual = TgwsMark::toHtml("*heading1\n**heading2", headattr: 'class="test"');
+        $expected = '<h2 class="test">heading1</h2><h3 class="test">heading2</h3>';
         Assert::assertSame($expected, $actual);
     }
 

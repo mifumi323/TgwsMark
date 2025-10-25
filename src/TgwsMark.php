@@ -34,12 +34,63 @@ class TgwsMark
         $ret = '';
         $lines = self::splitByNewLine($string, false);
         $blankcount = 0;
-        $prev = '*';
+        $prev = LineType::Header;
         $next_tail = '';
         $raw_line = '';
         /** @var int|null $detail_level */
         $detail_level = null;
+        /** @var string|null $code_block_mark */
+        $code_block_mark = null;
         foreach ($lines as $line) {
+            // コードブロック処理(コードブロック中では他の処理を行わないので最初にやる)
+            if ($prev === LineType::CodeBlock) {
+                if (trim($line) === $code_block_mark) {
+                    // コードブロック終了
+                    $ret .= $escape_function($next_tail.$raw_line);
+                    $raw_line = '';
+                    $ret .= '</code></pre>';
+                    $prev = LineType::Header;
+                    $next_tail = '';
+                    $code_block_mark = null;
+                    continue;
+                } else {
+                    // コードブロック内の行
+                    $raw_line .= $line."\n";
+                    continue;
+                }
+            } else {
+                if (preg_match('/^(`{3,})([\w-]+)?(:(.*))?$/u', $line, $matches)) {
+                    if ($prev === LineType::Paragraph) {
+                        $ret .= '</p>';
+                    } elseif ($prev === LineType::UnorderedList) {
+                        $ret .= '</ul>';
+                    } elseif ($prev === LineType::OrderedList) {
+                        $ret .= '</ol>';
+                    } elseif ($prev === LineType::Table) {
+                        $ret .= '</table>';
+                    }
+
+                    $code_block_mark = $matches[1];
+                    $language = $matches[2] ?? '';
+                    $title = $matches[4] ?? '';
+                    // コードブロック開始
+                    $ret .= $escape_function($next_tail.$raw_line);
+                    $raw_line = '';
+                    $ret .= '<pre';
+                    if (strlen($title) > 0) {
+                        $ret .= ' title="'.$escape_function($title).'"';
+                    }
+                    $ret .= '><code';
+                    if (strlen($language) > 0) {
+                        $ret .= ' class="language-'.htmlspecialchars($language).'"';
+                    }
+                    $ret .=">\n";
+                    $prev = LineType::CodeBlock;
+                    $next_tail = '';
+                    continue;
+                }
+            }
+
             [$line_content, $first, $second, $raw_head, $raw_tail] = self::splitLine($line);
             if ($first === '`') {
                 // その行の構文解析を行わない
@@ -48,9 +99,9 @@ class TgwsMark
             }
             $isblank = false;
             $style = ($blankcount > 1) ? (' style="margin-top:'.$blankcount.'em"') : '';
-            if ($first == '*' || strlen($line_content) == 0) {
+            if ($first === '*' || strlen($line_content) === 0) {
                 // 見出し
-                if ($first == '*') {
+                if ($first === '*') {
                     // 見出しレベルを先に計算しておく
                     if (isset($h_level)) {
                         $l = $h_level;
@@ -62,13 +113,13 @@ class TgwsMark
                         $l = null;
                     }
                 }
-                if ($prev == 'p') {
+                if ($prev === LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '-') {
+                } elseif ($prev === LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '+') {
+                } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
-                } elseif ($prev == '|') {
+                } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
                 if (isset($detail_level) && ((isset($l) && $l < $detail_level) || (strlen($second) > 0 && $second[0] === '>'))) {
@@ -115,60 +166,60 @@ class TgwsMark
                 } else {
                     $isblank = true;
                 }
-                $prev = '*';
-            } elseif ($first == '-') {
+                $prev = LineType::Header;
+            } elseif ($first === '-') {
                 // リスト
-                if ($prev == 'p') {
+                if ($prev === LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '+') {
+                } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
-                } elseif ($prev == '|') {
+                } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
-                if ($prev != '-') {
+                if ($prev !== LineType::UnorderedList) {
                     $ret .= '<ul'.$style.'>';
                 }
                 $ret .= '<li>'.$escape_function($second).'</li>';
-                $prev = '-';
-            } elseif ($first == '+') {
+                $prev = LineType::UnorderedList;
+            } elseif ($first === '+') {
                 // リスト
-                if ($prev == 'p') {
+                if ($prev === LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '-') {
+                } elseif ($prev === LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '|') {
+                } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
-                if ($prev != '+') {
+                if ($prev !== LineType::OrderedList) {
                     $ret .= '<ol'.$style.'>';
                 }
                 $ret .= '<li>'.$escape_function($second).'</li>';
-                $prev = '+';
-            } elseif ($first == '|' && (str_ends_with($second, '|') || str_ends_with($second, '|h'))) {
+                $prev = LineType::OrderedList;
+            } elseif ($first === '|' && (str_ends_with($second, '|') || str_ends_with($second, '|h'))) {
                 // 表
-                if ($prev == 'p') {
+                if ($prev === LineType::Paragraph) {
                     $ret .= '</p>';
-                } elseif ($prev == '-') {
+                } elseif ($prev === LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '+') {
+                } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
-                if ($prev != '|') {
+                if ($prev !== LineType::Table) {
                     $ret .= '<table'.$style.'>';
                 }
                 $cells = explode('|', $second);
                 $last = $cells[count($cells) - 1];
                 $tablehead = false;
-                if ($last == 'h') {
+                if ($last === 'h') {
                     $tablehead = true;
                 }
                 array_pop($cells);
@@ -196,33 +247,33 @@ class TgwsMark
                     $ret .= '</thead>';
                 }
 
-                $prev = '|';
+                $prev = LineType::Table;
             } else {
                 // 通常の文章
-                if ($prev == 'p') {
+                if ($prev === LineType::Paragraph) {
                     $ret .= '<br>';
-                } elseif ($prev == '-') {
+                } elseif ($prev === LineType::UnorderedList) {
                     $ret .= '</ul>';
-                } elseif ($prev == '+') {
+                } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
-                } elseif ($prev == '|') {
+                } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 } else {
                 }
                 $ret .= $escape_function($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
-                if ($prev == 'p') {
-                } elseif ($prev == '-') {
+                if ($prev === LineType::Paragraph) {
+                } elseif ($prev === LineType::UnorderedList) {
                     $ret .= '<p>';
-                } elseif ($prev == '+') {
+                } elseif ($prev === LineType::OrderedList) {
                     $ret .= '<p>';
-                } elseif ($prev == '|') {
+                } elseif ($prev === LineType::Table) {
                     $ret .= '<p>';
                 } else {
                     $ret .= '<p'.$style.'>';
                 }
                 $ret .= $escape_function($line_content);
-                $prev = 'p';
+                $prev = LineType::Paragraph;
             }
             if ($isblank) {
                 $blankcount++;
@@ -231,14 +282,19 @@ class TgwsMark
             }
             $next_tail = $raw_tail;
         }
-        if ($prev == 'p') {
+        if ($prev === LineType::Paragraph) {
             $ret .= '</p>';
-        } elseif ($prev == '-') {
+        } elseif ($prev === LineType::UnorderedList) {
             $ret .= '</ul>';
-        } elseif ($prev == '+') {
+        } elseif ($prev === LineType::OrderedList) {
             $ret .= '</ol>';
-        } elseif ($prev == '|') {
+        } elseif ($prev === LineType::Table) {
             $ret .= '</table>';
+        } elseif ($prev === LineType::CodeBlock) {
+            // コードブロックが閉じられずに終わった場合は閉じる
+            $ret .= $escape_function($next_tail.$raw_line);
+            $ret .= '</code></pre>';
+            $raw_line = '';
         }
         if (isset($detail_level)) {
             // 折り畳み記法(終了)

@@ -112,6 +112,8 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
             ["line1\n```\ncode line2\n\ncode line3\n```\nline4", "<p>line1</p><pre><code>\ncode line2\n\ncode line3\n</code></pre><p>line4</p>"],
             ["```\ncode line1\ncode line2", "<pre><code>\ncode line1\ncode line2\n</code></pre>"], // 閉じられない場合
             ["```markdown\n# Heading\nprint('Hello, World!')\n```", "<pre><code class=\"language-markdown\">\n# Heading\nprint('Hello, World!')\n</code></pre>"], // 言語指定あり
+            ["```:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code>\ncode line1\ncode line2\n</code></pre>"], // ファイル名指定
+            ["```php:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code class=\"language-php\">\ncode line1\ncode line2\n</code></pre>"], // 言語＋ファイル名指定
             ["````\ncode line1\n```\ncode block in code block\n```\ncode line2\n````", "<pre><code>\ncode line1\n```\ncode block in code block\n```\ncode line2\n</code></pre>"], // ネスト
             ["*>summary\n```\ncode line1\ncode line2\n```", "<details><summary>summary</summary><pre><code>\ncode line1\ncode line2\n</code></pre></details>"], // 折り畳み内コードブロック
             ["```\ncode line1\n````\ncode block in code block\n````\ncode line2\n```", "<pre><code>\ncode line1\n````\ncode block in code block\n````\ncode line2\n</code></pre>"], // ネスト逆

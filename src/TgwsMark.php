@@ -59,7 +59,7 @@ class TgwsMark
                     continue;
                 }
             } else {
-                if (preg_match('/^(`{3,})([\w-]+)?$/u', $line, $matches)) {
+                if (preg_match('/^(`{3,})([\w-]+)?(:(.*))?$/u', $line, $matches)) {
                     if ($prev === LineType::Paragraph) {
                         $ret .= '</p>';
                     } elseif ($prev === LineType::UnorderedList) {
@@ -72,10 +72,19 @@ class TgwsMark
 
                     $code_block_mark = $matches[1];
                     $language = $matches[2] ?? '';
+                    $title = $matches[4] ?? '';
                     // コードブロック開始
                     $ret .= $escape_function($next_tail.$raw_line);
                     $raw_line = '';
-                    $ret .= (empty($language) ? '<pre><code>' : '<pre><code class="language-'.htmlspecialchars($language).'">')."\n";
+                    $ret .= '<pre';
+                    if (strlen($title) > 0) {
+                        $ret .= ' title="'.$escape_function($title).'"';
+                    }
+                    $ret .= '><code';
+                    if (strlen($language) > 0) {
+                        $ret .= ' class="language-'.htmlspecialchars($language).'"';
+                    }
+                    $ret .=">\n";
                     $prev = LineType::CodeBlock;
                     $next_tail = '';
                     continue;

@@ -270,6 +270,34 @@ int main(void){}
 ```
 バッククォートの後に言語を書くことでハイライトのためのclassが付きます。
 
+#### コードブロックのタイトル指定
+````
+```:main.c
+int main(void){}
+```
+````
+```html
+<pre title="main.c"><code>
+int main(void){}
+</code></pre>
+```
+バッククォートの後にコロン「:」で区切ってタイトル(典型的にはファイル名)を書くとtitle属性に設定されます。
+JavaScript等で取り出して表示するとよいでしょう。
+
+#### コードブロックの言語とタイトルの同時指定
+````
+```c:main.c
+int main(void){}
+```
+````
+```html
+<pre title="main.c"><code class="language-c">
+int main(void){}
+</code></pre>
+```
+言語とタイトルは同時に指定できます。
+言語のほうを先に指定します。
+
 #### コードブロックを含むコードブロック
 `````
 ````markdown

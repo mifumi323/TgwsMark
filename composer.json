@@ -8,7 +8,8 @@
     "license": "Apache-2.0",
     "autoload": {
         "psr-4": {
-            "Mifumi323\\TgwsMark\\": "src/"
+            "Mifumi323\\TgwsMark\\": "src/",
+            "Mifumi323\\TgwsMark\\MarkConverter\\": "src/MarkConverter/"
         }
     },
     "authors": [

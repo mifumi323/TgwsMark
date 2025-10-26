@@ -16,6 +16,7 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
     {
         return [
             // 基本的なパターン
+            ['', ''],
             ['test', '<p>test</p>'],
             ["p1\n\np2", '<p>p1</p><p>p2</p>'],
             ["p1\n\n\np2", '<p>p1</p><p style="margin-top:2em">p2</p>'],

@@ -2,15 +2,20 @@
 
 namespace Mifumi323\TgwsMark;
 
+use Mifumi323\TgwsMark\MarkConverter\ContentHtmlConverterPreserveText;
+use Mifumi323\TgwsMark\MarkConverter\IContentConverter;
+
 class TgwsMarkHtmlConverter
 {
-    public function __construct()
+    public IContentConverter $contentConverter;
+
+    public function __construct(?IContentConverter $contentConverter = null)
     {
+        $this->contentConverter = $contentConverter ?? new ContentHtmlConverterPreserveText();
     }
 
     public function convert(string $string): string
     {
-        $escape_function ??= fn (string $value): string => $value;
         if (strlen($headattr) > 0) {
             $headattr = ' '.trim($headattr);
         }
@@ -36,7 +41,7 @@ class TgwsMarkHtmlConverter
             if ($prev === LineType::CodeBlock) {
                 if (trim($line) === $code_block_mark) {
                     // コードブロック終了
-                    $ret .= $escape_function($next_tail.$raw_line);
+                    $ret .= $this->contentConverter->convertCodeBlockContent($next_tail.$raw_line);
                     $raw_line = '';
                     $ret .= '</code></pre>';
                     $prev = LineType::Header;
@@ -64,11 +69,11 @@ class TgwsMarkHtmlConverter
                     $language = $matches[2] ?? '';
                     $title = $matches[4] ?? '';
                     // コードブロック開始
-                    $ret .= $escape_function($next_tail.$raw_line);
+                    $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line);
                     $raw_line = '';
                     $ret .= '<pre';
                     if (strlen($title) > 0) {
-                        $ret .= ' title="'.$escape_function($title).'"';
+                        $ret .= ' title="'.$this->contentConverter->convertAttributeValueContent($title).'"';
                     }
                     $ret .= '><code';
                     if (strlen($language) > 0) {
@@ -117,7 +122,7 @@ class TgwsMarkHtmlConverter
                     $ret .= '</details>';
                     $detail_level = null;
                 }
-                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
+                $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
                 if (preg_match('/#([\w-]+)$/', $second, $matches)) {
                     $hash = $matches[1];
@@ -135,7 +140,7 @@ class TgwsMarkHtmlConverter
                             $hash_link = '';
                             $hash_attr = '';
                         }
-                        $ret .= '<'.$h.$headattr.$hash_attr.$style.'>'.$escape_function($second).$hash_link.'</'.$h.'>';
+                        $ret .= '<'.$h.$headattr.$hash_attr.$style.'>'.$this->contentConverter->convertTextContent($second).$hash_link.'</'.$h.'>';
                     } else {
                         // 折り畳み記法(開始)
                         $detail_level = $l ?? -1;
@@ -150,7 +155,7 @@ class TgwsMarkHtmlConverter
                                 $hash_link = '';
                                 $hash_attr = '';
                             }
-                            $ret .= '<summary'.$hash_attr.'>'.$escape_function($second).$hash_link.'</summary>';
+                            $ret .= '<summary'.$hash_attr.'>'.$this->contentConverter->convertTextContent($second).$hash_link.'</summary>';
                         }
                     }
                 } else {
@@ -166,13 +171,13 @@ class TgwsMarkHtmlConverter
                 } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
-                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
+                $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
                 if ($prev !== LineType::UnorderedList) {
                     $ret .= '<ul'.$style.'>';
                 }
-                $ret .= '<li>'.$escape_function($second).'</li>';
+                $ret .= '<li>'.$this->contentConverter->convertTextContent($second).'</li>';
                 $prev = LineType::UnorderedList;
             } elseif ($first === '+') {
                 // リスト
@@ -183,13 +188,13 @@ class TgwsMarkHtmlConverter
                 } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
-                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
+                $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
                 if ($prev !== LineType::OrderedList) {
                     $ret .= '<ol'.$style.'>';
                 }
-                $ret .= '<li>'.$escape_function($second).'</li>';
+                $ret .= '<li>'.$this->contentConverter->convertTextContent($second).'</li>';
                 $prev = LineType::OrderedList;
             } elseif ($first === '|' && (str_ends_with($second, '|') || str_ends_with($second, '|h'))) {
                 // 表
@@ -200,7 +205,7 @@ class TgwsMarkHtmlConverter
                 } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
                 }
-                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
+                $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
 
                 if ($prev !== LineType::Table) {
@@ -230,7 +235,7 @@ class TgwsMarkHtmlConverter
                     } else {
                         $tdargs = '';
                     }
-                    $ret .= '<'.$td.$escape_function($tdargs).'>'.$escape_function(trim($cell)).'</'.$td.'>';
+                    $ret .= '<'.$td.$this->contentConverter->convertAttributesInTagContent($tdargs).'>'.$this->contentConverter->convertTextContent(trim($cell)).'</'.$td.'>';
                 }
                 $ret .= '</tr>';
                 if ($tablehead) {
@@ -250,7 +255,7 @@ class TgwsMarkHtmlConverter
                     $ret .= '</table>';
                 } else {
                 }
-                $ret .= $escape_function($next_tail.$raw_line.$raw_head);
+                $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
                 if ($prev === LineType::Paragraph) {
                 } elseif ($prev === LineType::UnorderedList) {
@@ -262,7 +267,7 @@ class TgwsMarkHtmlConverter
                 } else {
                     $ret .= '<p'.$style.'>';
                 }
-                $ret .= $escape_function($line_content);
+                $ret .= $this->contentConverter->convertTextContent($line_content);
                 $prev = LineType::Paragraph;
             }
             if ($isblank) {
@@ -282,7 +287,7 @@ class TgwsMarkHtmlConverter
             $ret .= '</table>';
         } elseif ($prev === LineType::CodeBlock) {
             // コードブロックが閉じられずに終わった場合は閉じる
-            $ret .= $escape_function($next_tail.$raw_line);
+            $ret .= $this->contentConverter->convertCodeBlockContent($next_tail.$raw_line);
             $ret .= '</code></pre>';
             $raw_line = '';
         }
@@ -290,7 +295,7 @@ class TgwsMarkHtmlConverter
             // 折り畳み記法(終了)
             $ret .= '</details>';
         }
-        $ret .= $escape_function($next_tail.$raw_line);
+        $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line);
 
         return $ret;
     }

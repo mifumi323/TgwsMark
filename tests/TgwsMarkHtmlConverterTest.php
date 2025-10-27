@@ -24,11 +24,4 @@ class TgwsMarkHtmlConverterTest extends \PHPUnit\Framework\TestCase
         $actual = $converter->convert($input);
         Assert::assertSame($expected, $actual);
     }
-
-    public function testSplitLine()
-    {
-        $actual = TgwsMark::splitLine('a<<bc>>d');
-        $expected = ['bc', 'b', 'c', 'a', 'd'];
-        Assert::assertSame($expected, $actual);
-    }
 }

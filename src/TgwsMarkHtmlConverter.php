@@ -2,30 +2,26 @@
 
 namespace Mifumi323\TgwsMark;
 
+use Mifumi323\TgwsMark\MarkConverter\BlankCountToEmConverter;
 use Mifumi323\TgwsMark\MarkConverter\ContentHtmlConverterPreserveText;
+use Mifumi323\TgwsMark\MarkConverter\HeadingToHnHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\IContentConverter;
+use Mifumi323\TgwsMark\MarkConverter\IHeadingConverter;
 
 class TgwsMarkHtmlConverter
 {
     public IContentConverter $contentConverter;
+    public IHeadingConverter $headingConverter;
 
-    public function __construct(?IContentConverter $contentConverter = null)
+    public function __construct(?IContentConverter $contentConverter = null, ?IHeadingConverter $headingConverter = null)
     {
+        $blankCountToEmConverter = new BlankCountToEmConverter();
         $this->contentConverter = $contentConverter ?? new ContentHtmlConverterPreserveText();
+        $this->headingConverter = $headingConverter ?? new HeadingToHnHtmlConverter('h', 2, $blankCountToEmConverter, $this->contentConverter, '');
     }
 
     public function convert(string $string): string
     {
-        if (strlen($headattr) > 0) {
-            $headattr = ' '.trim($headattr);
-        }
-        if (strlen($head) === 2 && ($head[0] === 'h' || $head[0] === 'H') && is_numeric($head[1])) {
-            $h_tag = $head[0];
-            $h_level = (int) $head[1];
-        } else {
-            $h_tag = $head;
-            $h_level = null;
-        }
         $ret = '';
         $lines = preg_split('/\r\n|\r|\n/', $string);
         $blankcount = 0;
@@ -98,14 +94,10 @@ class TgwsMarkHtmlConverter
                 // 見出し
                 if ($first === '*') {
                     // 見出しレベルを先に計算しておく
-                    if (isset($h_level)) {
-                        $l = $h_level;
-                        while ($second !== '' && $second[0] === '*') {
-                            $second = substr($second, 1);
-                            $l++;
-                        }
-                    } else {
-                        $l = null;
+                    $l = 1;
+                    while ($second !== '' && $second[0] === '*') {
+                        $second = substr($second, 1);
+                        $l++;
                     }
                 }
                 if ($prev === LineType::Paragraph) {
@@ -131,16 +123,8 @@ class TgwsMarkHtmlConverter
                     $hash = '';
                 }
                 if (strlen($second) > 0) {
-                    $h = isset($l) ? $h_tag.$l : $head;
                     if ($second[0] !== '>') {
-                        if (strlen($hash) > 0) {
-                            $hash_link = '<a href="#'.$hash.'" class="hashlink" title="「'.htmlspecialchars(strip_tags($second)).'」の位置へのリンク">#</a>';
-                            $hash_attr = ' id="'.$hash.'"';
-                        } else {
-                            $hash_link = '';
-                            $hash_attr = '';
-                        }
-                        $ret .= '<'.$h.$headattr.$hash_attr.$style.'>'.$this->contentConverter->convertTextContent($second).$hash_link.'</'.$h.'>';
+                        $ret .= $this->headingConverter->convert($l, $blankcount, $second, $hash);
                     } else {
                         // 折り畳み記法(開始)
                         $detail_level = $l ?? -1;

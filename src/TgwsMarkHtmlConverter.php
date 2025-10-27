@@ -270,7 +270,7 @@ class TgwsMarkHtmlConverter
         } elseif ($prev === LineType::CodeBlock) {
             // コードブロックが閉じられずに終わった場合は閉じる
             $ret .= $this->contentConverter->convertCodeBlockContent($next_tail.$raw_line);
-            $ret .= '</code></pre>';
+            $ret .= $this->codeBlockConverter->close();
             $raw_line = '';
         }
         if (isset($detail_level)) {

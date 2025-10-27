@@ -3,8 +3,10 @@
 namespace Mifumi323\TgwsMark;
 
 use Mifumi323\TgwsMark\MarkConverter\BlankCountToEmConverter;
+use Mifumi323\TgwsMark\MarkConverter\CodeBlockHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\ContentHtmlConverterPreserveText;
 use Mifumi323\TgwsMark\MarkConverter\HeadingToHnHtmlConverter;
+use Mifumi323\TgwsMark\MarkConverter\ICodeBlockConverter;
 use Mifumi323\TgwsMark\MarkConverter\IContentConverter;
 use Mifumi323\TgwsMark\MarkConverter\IHeadingConverter;
 
@@ -12,12 +14,17 @@ class TgwsMarkHtmlConverter
 {
     public IContentConverter $contentConverter;
     public IHeadingConverter $headingConverter;
+    public ICodeBlockConverter $codeBlockConverter;
 
-    public function __construct(?IContentConverter $contentConverter = null, ?IHeadingConverter $headingConverter = null)
-    {
+    public function __construct(
+        ?IContentConverter $contentConverter = null,
+        ?IHeadingConverter $headingConverter = null,
+        ?ICodeBlockConverter $codeBlockConverter = null,
+    ) {
         $blankCountToEmConverter = new BlankCountToEmConverter();
         $this->contentConverter = $contentConverter ?? new ContentHtmlConverterPreserveText();
         $this->headingConverter = $headingConverter ?? new HeadingToHnHtmlConverter('h', 2, $blankCountToEmConverter, $this->contentConverter, '');
+        $this->codeBlockConverter = $codeBlockConverter ?? new CodeBlockHtmlConverter($blankCountToEmConverter, $this->contentConverter);
     }
 
     public function convert(string $string): string
@@ -39,7 +46,7 @@ class TgwsMarkHtmlConverter
                     // コードブロック終了
                     $ret .= $this->contentConverter->convertCodeBlockContent($next_tail.$raw_line);
                     $raw_line = '';
-                    $ret .= '</code></pre>';
+                    $ret .= $this->codeBlockConverter->close();
                     $prev = LineType::Header;
                     $next_tail = '';
                     $code_block_mark = null;
@@ -67,15 +74,7 @@ class TgwsMarkHtmlConverter
                     // コードブロック開始
                     $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line);
                     $raw_line = '';
-                    $ret .= '<pre';
-                    if (strlen($title) > 0) {
-                        $ret .= ' title="'.$this->contentConverter->convertAttributeValueContent($title).'"';
-                    }
-                    $ret .= '><code';
-                    if (strlen($language) > 0) {
-                        $ret .= ' class="language-'.htmlspecialchars($language).'"';
-                    }
-                    $ret .= ">\n";
+                    $ret .= $this->codeBlockConverter->open($language, $title, $blankcount);
                     $prev = LineType::CodeBlock;
                     $next_tail = '';
                     continue;

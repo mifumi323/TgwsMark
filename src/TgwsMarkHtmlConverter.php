@@ -11,6 +11,7 @@ use Mifumi323\TgwsMark\MarkConverter\IContentConverter;
 use Mifumi323\TgwsMark\MarkConverter\IHeadingConverter;
 use Mifumi323\TgwsMark\MarkConverter\IParagraphConverter;
 use Mifumi323\TgwsMark\MarkConverter\ParagraphHtmlConverter;
+use Mifumi323\TgwsMark\MarkConverter\UnorderedListHtmlConverter;
 
 class TgwsMarkHtmlConverter
 {
@@ -18,18 +19,21 @@ class TgwsMarkHtmlConverter
     public IHeadingConverter $headingConverter;
     public ICodeBlockConverter $codeBlockConverter;
     public IParagraphConverter $paragraphConverter;
+    public UnorderedListHtmlConverter $unorderedListConverter;
 
     public function __construct(
         ?IContentConverter $contentConverter = null,
         ?IHeadingConverter $headingConverter = null,
         ?ICodeBlockConverter $codeBlockConverter = null,
         ?IParagraphConverter $paragraphConverter = null,
+        ?UnorderedListHtmlConverter $unorderedListConverter = null,
     ) {
         $blankCountToEmConverter = new BlankCountToEmConverter();
         $this->contentConverter = $contentConverter ?? new ContentHtmlConverterPreserveText();
         $this->headingConverter = $headingConverter ?? new HeadingToHnHtmlConverter('h', 2, $blankCountToEmConverter, $this->contentConverter, '');
         $this->codeBlockConverter = $codeBlockConverter ?? new CodeBlockHtmlConverter($blankCountToEmConverter, $this->contentConverter);
         $this->paragraphConverter = $paragraphConverter ?? new ParagraphHtmlConverter($blankCountToEmConverter);
+        $this->unorderedListConverter = $unorderedListConverter ?? new UnorderedListHtmlConverter($blankCountToEmConverter);
     }
 
     public function convert(string $string): string
@@ -66,7 +70,7 @@ class TgwsMarkHtmlConverter
                     if ($prev === LineType::Paragraph) {
                         $ret .= $this->paragraphConverter->close();
                     } elseif ($prev === LineType::UnorderedList) {
-                        $ret .= '</ul>';
+                        $ret .= $this->unorderedListConverter->close();
                     } elseif ($prev === LineType::OrderedList) {
                         $ret .= '</ol>';
                     } elseif ($prev === LineType::Table) {
@@ -107,7 +111,7 @@ class TgwsMarkHtmlConverter
                 if ($prev === LineType::Paragraph) {
                     $ret .= $this->paragraphConverter->close();
                 } elseif ($prev === LineType::UnorderedList) {
-                    $ret .= '</ul>';
+                    $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
                 } elseif ($prev === LineType::Table) {
@@ -163,16 +167,16 @@ class TgwsMarkHtmlConverter
                 $raw_line = '';
 
                 if ($prev !== LineType::UnorderedList) {
-                    $ret .= '<ul'.$style.'>';
+                    $ret .= $this->unorderedListConverter->open($blankcount);
                 }
-                $ret .= '<li>'.$this->contentConverter->convertTextContent($second).'</li>';
+                $ret .= $this->unorderedListConverter->itemOpen().$this->contentConverter->convertTextContent($second).$this->unorderedListConverter->itemClose();
                 $prev = LineType::UnorderedList;
             } elseif ($first === '+') {
                 // リスト
                 if ($prev === LineType::Paragraph) {
                     $ret .= $this->paragraphConverter->close();
                 } elseif ($prev === LineType::UnorderedList) {
-                    $ret .= '</ul>';
+                    $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
@@ -189,7 +193,7 @@ class TgwsMarkHtmlConverter
                 if ($prev === LineType::Paragraph) {
                     $ret .= $this->paragraphConverter->close();
                 } elseif ($prev === LineType::UnorderedList) {
-                    $ret .= '</ul>';
+                    $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
                 }
@@ -236,7 +240,7 @@ class TgwsMarkHtmlConverter
                 if ($prev === LineType::Paragraph) {
                     $ret .= $this->paragraphConverter->break();
                 } elseif ($prev === LineType::UnorderedList) {
-                    $ret .= '</ul>';
+                    $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
                     $ret .= '</ol>';
                 } elseif ($prev === LineType::Table) {
@@ -262,7 +266,7 @@ class TgwsMarkHtmlConverter
         if ($prev === LineType::Paragraph) {
             $ret .= $this->paragraphConverter->close();
         } elseif ($prev === LineType::UnorderedList) {
-            $ret .= '</ul>';
+            $ret .= $this->unorderedListConverter->close();
         } elseif ($prev === LineType::OrderedList) {
             $ret .= '</ol>';
         } elseif ($prev === LineType::Table) {

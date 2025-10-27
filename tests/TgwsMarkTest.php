@@ -3,10 +3,8 @@
 namespace Mifumi323\TgwsMark;
 
 use PHPUnit\Framework\Assert;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-#[CoversClass(TgwsMark::class)]
 class TgwsMarkTest extends \PHPUnit\Framework\TestCase
 {
     /**

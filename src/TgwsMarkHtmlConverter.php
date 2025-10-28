@@ -5,9 +5,11 @@ namespace Mifumi323\TgwsMark;
 use Mifumi323\TgwsMark\MarkConverter\BlankCountToEmConverter;
 use Mifumi323\TgwsMark\MarkConverter\CodeBlockHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\ContentHtmlConverterPreserveText;
+use Mifumi323\TgwsMark\MarkConverter\DetailsHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\HeadingToHnHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\ICodeBlockConverter;
 use Mifumi323\TgwsMark\MarkConverter\IContentConverter;
+use Mifumi323\TgwsMark\MarkConverter\IDetailsConverter;
 use Mifumi323\TgwsMark\MarkConverter\IHeadingConverter;
 use Mifumi323\TgwsMark\MarkConverter\IOrderedListConverter;
 use Mifumi323\TgwsMark\MarkConverter\IParagraphConverter;
@@ -27,6 +29,7 @@ class TgwsMarkHtmlConverter
     public IUnorderedListConverter $unorderedListConverter;
     public IOrderedListConverter $orderedListConverter;
     public ITableConverter $tableConverter;
+    public IDetailsConverter $detailsConverter;
 
     public function __construct(
         ?IContentConverter $contentConverter = null,
@@ -36,6 +39,7 @@ class TgwsMarkHtmlConverter
         ?IUnorderedListConverter $unorderedListConverter = null,
         ?IOrderedListConverter $orderedListConverter = null,
         ?ITableConverter $tableConverter = null,
+        ?IDetailsConverter $detailsConverter = null,
     ) {
         $blankCountToEmConverter = new BlankCountToEmConverter();
         $this->contentConverter = $contentConverter ?? new ContentHtmlConverterPreserveText();
@@ -45,6 +49,7 @@ class TgwsMarkHtmlConverter
         $this->unorderedListConverter = $unorderedListConverter ?? new UnorderedListHtmlConverter($blankCountToEmConverter);
         $this->orderedListConverter = $orderedListConverter ?? new OrderedListHtmlConverter($blankCountToEmConverter);
         $this->tableConverter = $tableConverter ?? new TableHtmlConverter($blankCountToEmConverter);
+        $this->detailsConverter = $detailsConverter ?? new DetailsHtmlConverter($blankCountToEmConverter, $this->contentConverter);
     }
 
     public function convert(string $string): string
@@ -129,7 +134,7 @@ class TgwsMarkHtmlConverter
                 }
                 if (isset($detail_level) && ((isset($l) && $l < $detail_level) || (strlen($second) > 0 && $second[0] === '>'))) {
                     // 折り畳み記法(終了)
-                    $ret .= '</details>';
+                    $ret .= $this->detailsConverter->close();
                     $detail_level = null;
                 }
                 $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
@@ -147,18 +152,7 @@ class TgwsMarkHtmlConverter
                         // 折り畳み記法(開始)
                         $detail_level = $l ?? -1;
                         $second = substr($second, 1);
-                        $ret .= '<details>';
-                        if (strlen($second) > 0) {
-                            if (strlen($hash) > 0) {
-                                // 上と同じコードだけど $second の中身が違うよ。
-                                $hash_link = '<a href="#'.$hash.'" class="hashlink" title="「'.htmlspecialchars(strip_tags($second)).'」の位置へのリンク">#</a>';
-                                $hash_attr = ' id="'.$hash.'"';
-                            } else {
-                                $hash_link = '';
-                                $hash_attr = '';
-                            }
-                            $ret .= '<summary'.$hash_attr.'>'.$this->contentConverter->convertTextContent($second).$hash_link.'</summary>';
-                        }
+                        $ret .= $this->detailsConverter->open($blankcount, $second, $hash);
                     }
                 } else {
                     $isblank = true;
@@ -291,7 +285,7 @@ class TgwsMarkHtmlConverter
         }
         if (isset($detail_level)) {
             // 折り畳み記法(終了)
-            $ret .= '</details>';
+            $ret .= $this->detailsConverter->close();
         }
         $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line);
 

@@ -5,7 +5,7 @@ namespace Mifumi323\TgwsMark\MarkConverter;
 interface IHeadingConverter
 {
     /**
-     * 見出しが開始するときに出力される文字列を返します。
+     * 見出しとして出力される文字列を返します。
      *
      * @param int    $level      見出しレベル
      * @param int    $blankcount 見出し前の空行数

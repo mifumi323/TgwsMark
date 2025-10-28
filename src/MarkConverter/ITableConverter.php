@@ -7,7 +7,7 @@ interface ITableConverter
     /**
      * テーブルが開始するときに出力される文字列を返します。
      *
-     * @param int $blankcount 箇条書きリスト前の空行数
+     * @param int $blankcount テーブル前の空行数
      */
     public function open(int $blankcount): string;
 

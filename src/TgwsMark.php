@@ -42,32 +42,7 @@ class TgwsMark
     /** @return string[] */
     public static function splitLine(string $line): array
     {
-        $head_split = explode('<<', $line, 2);
-        if (count($head_split) > 1) {
-            $head = $head_split[0];
-            $head_removed = $head_split[1];
-        } else {
-            $head = '';
-            $head_removed = $line;
-        }
-        $tail_split = explode('>>', $head_removed, 2);
-        if (count($tail_split) > 1) {
-            $tail = $tail_split[1];
-            $content = $tail_split[0];
-        } else {
-            $tail = '';
-            $content = $head_removed;
-        }
-        $command = substr($content, 0, 1);
-        $command_removed = substr($content, 1);
-
-        return [
-            $content,
-            $command,
-            $command_removed,
-            $head,
-            $tail,
-        ];
+        return Converter::splitLine($line);
     }
 
     /**

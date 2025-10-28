@@ -38,8 +38,8 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         $converter = new Converter(headingConverter: $headingToFixedTagHtmlConverter);
         $input = "*Heading 1\n\n**Heading 2#custom-hash\n\n\n***Heading 3\nNormal paragraph.";
         $expected = '<div class="fixed-heading">Heading 1</div>'.
-            '<div class="fixed-heading" id="custom-hash">Heading 2<a href="#custom-hash" class="hashlink" title="「Heading 2」の位置へのリンク">#</a></div>'.
-            '<div class="fixed-heading" style="margin-top:2em">Heading 3</div>'.
+            '<div class="fixed-heading" id="custom-hash">*Heading 2<a href="#custom-hash" class="hashlink" title="「Heading 2」の位置へのリンク">#</a></div>'.
+            '<div class="fixed-heading" style="margin-top:2em">**Heading 3</div>'.
             '<p>Normal paragraph.</p>';
         $actual = $converter->convert($input);
         Assert::assertSame($expected, $actual);

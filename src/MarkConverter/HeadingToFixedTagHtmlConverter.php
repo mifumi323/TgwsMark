@@ -20,9 +20,10 @@ class HeadingToFixedTagHtmlConverter implements IHeadingConverter
             $hash_link = '';
             $hash_attr = '';
         }
+        $asterisks = str_repeat('*', $level - 1);
 
         return '<'.$this->tag.$this->contentConverter->convertAttributesInTagContent($this->headattr).$hash_attr.$this->blankCountConverter->convert($blankcount).'>'.
-            $this->contentConverter->convertTextContent($content).
+            $this->contentConverter->convertTextContent($asterisks.$content).
             $hash_link.'</'.$this->tag.'>';
     }
 }

@@ -20,7 +20,7 @@ use Mifumi323\TgwsMark\MarkConverter\ParagraphHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\TableHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\UnorderedListHtmlConverter;
 
-class TgwsMarkHtmlConverter
+class Converter
 {
     public IContentConverter $contentConverter;
     public IHeadingConverter $headingConverter;

@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 require_once __DIR__.'/TgwsMarkTest.php';
 
-class TgwsMarkHtmlConverterTest extends \PHPUnit\Framework\TestCase
+class ConverterTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @return array[]
@@ -22,7 +22,7 @@ class TgwsMarkHtmlConverterTest extends \PHPUnit\Framework\TestCase
     #[DataProvider('toHtmlDataProvider')]
     public function testConvert($input, $expected)
     {
-        $converter = new TgwsMarkHtmlConverter();
+        $converter = new Converter();
         $actual = $converter->convert($input);
         Assert::assertSame($expected, $actual);
     }
@@ -35,7 +35,7 @@ class TgwsMarkHtmlConverterTest extends \PHPUnit\Framework\TestCase
             new ContentHtmlConverterPreserveText(),
             'class="fixed-heading"',
         );
-        $converter = new TgwsMarkHtmlConverter(headingConverter: $headingToFixedTagHtmlConverter);
+        $converter = new Converter(headingConverter: $headingToFixedTagHtmlConverter);
         $input = "*Heading 1\n\n**Heading 2#custom-hash\n\n\n***Heading 3\nNormal paragraph.";
         $expected = '<div class="fixed-heading">Heading 1</div>'.
             '<div class="fixed-heading" id="custom-hash">Heading 2<a href="#custom-hash" class="hashlink" title="「Heading 2」の位置へのリンク">#</a></div>'.

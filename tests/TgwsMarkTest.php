@@ -3,10 +3,8 @@
 namespace Mifumi323\TgwsMark;
 
 use PHPUnit\Framework\Assert;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-#[CoversClass(TgwsMark::class)]
 class TgwsMarkTest extends \PHPUnit\Framework\TestCase
 {
     /**
@@ -16,6 +14,7 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
     {
         return [
             // 基本的なパターン
+            ['', ''],
             ['test', '<p>test</p>'],
             ["p1\n\np2", '<p>p1</p><p>p2</p>'],
             ["p1\n\n\np2", '<p>p1</p><p style="margin-top:2em">p2</p>'],
@@ -157,10 +156,37 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
         Assert::assertSame($expected, $actual);
     }
 
+    public function testToHtmlWithHeadSpecifyFunction()
+    {
+        $input = "*<h1>TEST</h1>#xxx\n<script>alert('XSS');</script>\n\n```\n<b>code</b>\n```\n| title=\"\">table|";
+        $expected = "<h2 id=\"xxx\">&lt;h1&gt;TEST&lt;/h1&gt;<a href=\"#xxx\" class=\"hashlink\" title=\"「TEST」の位置へのリンク\">#</a></h2><p>&lt;script&gt;alert(&#039;XSS&#039;);&lt;/script&gt;</p><pre><code>\n&lt;b&gt;code&lt;/b&gt;\n</code></pre><table><tr><td title=&quot;&quot;>table</td></tr></table>";
+        $actual = TgwsMark::toHtml($input, escape_function: htmlspecialchars(...));
+        Assert::assertSame($expected, $actual);
+    }
+
     public function testSplitLine()
     {
         $actual = TgwsMark::splitLine('a<<bc>>d');
         $expected = ['bc', 'b', 'c', 'a', 'd'];
         Assert::assertSame($expected, $actual);
+    }
+
+    public function testSplitByNewLine()
+    {
+        $cases = [
+            ['', ['']],
+            ["line1\nline2", ['line1', 'line2']],
+            ["line1\r\nline2", ['line1', 'line2']],
+            ["line1\rline2", ['line1', 'line2']],
+            ["line1\n\rline2", ['line1', '', 'line2']],
+            ["single line", ['single line']],
+            ["line1\nline2\nline3", ['line1', 'line2', 'line3']],
+            ["line1\r\nline2\r\nline3", ['line1', 'line2', 'line3']],
+            ["line1\rline2\rline3", ['line1', 'line2', 'line3']],
+        ];
+        foreach ($cases as [$input, $expected]) {
+            $actual = TgwsMark::splitByNewLine($input, false); // 空行維持するモードしか使ってないので第2引数はfalse固定
+            Assert::assertSame($expected, $actual);
+        }
     }
 }

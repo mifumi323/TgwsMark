@@ -20,6 +20,17 @@ echo $html;
 // 出力：<h2>み⭐だ⭐し</h2><p>ほんぶん👣</p>
 ```
 
+```php
+$tgws_mark = <<<TGWSMARK
+*Converterをインスタンス化しても
+使えるよ🫧
+TGWSMARK;
+$converter = new \Mifumi323\TgwsMark\Converter();
+$html = $converter->convert($tgws_mark);
+echo $html;
+// 出力：<h2>Converterをインスタンス化しても</h2><p>使えるよ🫧</p>
+```
+
 ## ぶんぽう🥒
 
 ### パラグラフ

@@ -21,7 +21,7 @@ class HeadingToFixedTagHtmlConverter implements IHeadingConverter
             $hash_attr = '';
         }
 
-        return '<'.$this->tag.$this->headattr.$hash_attr.$this->blankCountConverter->convert($blankcount).'>'.
+        return '<'.$this->tag.$this->contentConverter->convertAttributesInTagContent($this->headattr).$hash_attr.$this->blankCountConverter->convert($blankcount).'>'.
             $this->contentConverter->convertTextContent($content).
             $hash_link.'</'.$this->tag.'>';
     }

@@ -4,7 +4,7 @@ namespace Mifumi323\TgwsMark\MarkConverter;
 
 class TableHtmlConverter implements ITableConverter
 {
-    public function __construct(public IBlankCountConverter $blankCountConverter)
+    public function __construct(public IBlankCountConverter $blankCountConverter, public IContentConverter $contentConverter)
     {
     }
 
@@ -32,7 +32,7 @@ class TableHtmlConverter implements ITableConverter
     {
         $tag = $isHeader ? 'th' : 'td';
 
-        return '<'.$tag.$attributes.'>';
+        return '<'.$tag.$this->contentConverter->convertAttributesInTagContent($attributes).'>';
     }
 
     public function cellClose(bool $isHeader): string

@@ -48,7 +48,7 @@ class Converter
         $this->paragraphConverter = $paragraphConverter ?? new ParagraphHtmlConverter($blankCountToEmConverter);
         $this->unorderedListConverter = $unorderedListConverter ?? new UnorderedListHtmlConverter($blankCountToEmConverter);
         $this->orderedListConverter = $orderedListConverter ?? new OrderedListHtmlConverter($blankCountToEmConverter);
-        $this->tableConverter = $tableConverter ?? new TableHtmlConverter($blankCountToEmConverter);
+        $this->tableConverter = $tableConverter ?? new TableHtmlConverter($blankCountToEmConverter, $this->contentConverter);
         $this->detailsConverter = $detailsConverter ?? new DetailsHtmlConverter($blankCountToEmConverter, $this->contentConverter);
     }
 

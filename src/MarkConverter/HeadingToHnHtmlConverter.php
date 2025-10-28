@@ -21,7 +21,7 @@ class HeadingToHnHtmlConverter implements IHeadingConverter
             $hash_attr = '';
         }
 
-        return '<'.$this->firstLetter.($this->baseLevel + $level - 1).$this->headattr.$hash_attr.$this->blankCountConverter->convert($blankcount).'>'.
+        return '<'.$this->firstLetter.($this->baseLevel + $level - 1).$this->contentConverter->convertAttributesInTagContent($this->headattr).$hash_attr.$this->blankCountConverter->convert($blankcount).'>'.
             $this->contentConverter->convertTextContent($content).
             $hash_link.'</'.$this->firstLetter.($this->baseLevel + $level - 1).'>';
     }

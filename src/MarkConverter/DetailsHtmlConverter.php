@@ -20,7 +20,7 @@ class DetailsHtmlConverter implements IDetailsConverter
                 $hash_link = '';
                 $hash_attr = '';
             }
-            $ret .= '<summary'.$hash_attr.'>'.$this->contentConverter->convertTextContent($summary).$hash_link.'</summary>';
+            $ret .= '<summary'.$this->contentConverter->convertAttributesInTagContent($hash_attr).'>'.$this->contentConverter->convertTextContent($summary).$hash_link.'</summary>';
         }
 
         return $ret;

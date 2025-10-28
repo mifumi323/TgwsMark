@@ -9,7 +9,9 @@ use Mifumi323\TgwsMark\MarkConverter\HeadingToHnHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\ICodeBlockConverter;
 use Mifumi323\TgwsMark\MarkConverter\IContentConverter;
 use Mifumi323\TgwsMark\MarkConverter\IHeadingConverter;
+use Mifumi323\TgwsMark\MarkConverter\IOrderedListConverter;
 use Mifumi323\TgwsMark\MarkConverter\IParagraphConverter;
+use Mifumi323\TgwsMark\MarkConverter\OrderedListHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\ParagraphHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\UnorderedListHtmlConverter;
 
@@ -20,6 +22,7 @@ class TgwsMarkHtmlConverter
     public ICodeBlockConverter $codeBlockConverter;
     public IParagraphConverter $paragraphConverter;
     public UnorderedListHtmlConverter $unorderedListConverter;
+    public IOrderedListConverter $orderedListConverter;
 
     public function __construct(
         ?IContentConverter $contentConverter = null,
@@ -27,6 +30,7 @@ class TgwsMarkHtmlConverter
         ?ICodeBlockConverter $codeBlockConverter = null,
         ?IParagraphConverter $paragraphConverter = null,
         ?UnorderedListHtmlConverter $unorderedListConverter = null,
+        ?IOrderedListConverter $orderedListConverter = null,
     ) {
         $blankCountToEmConverter = new BlankCountToEmConverter();
         $this->contentConverter = $contentConverter ?? new ContentHtmlConverterPreserveText();
@@ -34,6 +38,7 @@ class TgwsMarkHtmlConverter
         $this->codeBlockConverter = $codeBlockConverter ?? new CodeBlockHtmlConverter($blankCountToEmConverter, $this->contentConverter);
         $this->paragraphConverter = $paragraphConverter ?? new ParagraphHtmlConverter($blankCountToEmConverter);
         $this->unorderedListConverter = $unorderedListConverter ?? new UnorderedListHtmlConverter($blankCountToEmConverter);
+        $this->orderedListConverter = $orderedListConverter ?? new OrderedListHtmlConverter($blankCountToEmConverter);
     }
 
     public function convert(string $string): string
@@ -72,7 +77,7 @@ class TgwsMarkHtmlConverter
                     } elseif ($prev === LineType::UnorderedList) {
                         $ret .= $this->unorderedListConverter->close();
                     } elseif ($prev === LineType::OrderedList) {
-                        $ret .= '</ol>';
+                        $ret .= $this->orderedListConverter->close();
                     } elseif ($prev === LineType::Table) {
                         $ret .= '</table>';
                     }
@@ -113,7 +118,7 @@ class TgwsMarkHtmlConverter
                 } elseif ($prev === LineType::UnorderedList) {
                     $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
-                    $ret .= '</ol>';
+                    $ret .= $this->orderedListConverter->close();
                 } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
@@ -159,7 +164,7 @@ class TgwsMarkHtmlConverter
                 if ($prev === LineType::Paragraph) {
                     $ret .= $this->paragraphConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
-                    $ret .= '</ol>';
+                    $ret .= $this->orderedListConverter->close();
                 } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 }
@@ -184,9 +189,9 @@ class TgwsMarkHtmlConverter
                 $raw_line = '';
 
                 if ($prev !== LineType::OrderedList) {
-                    $ret .= '<ol'.$style.'>';
+                    $ret .= $this->orderedListConverter->open($blankcount);
                 }
-                $ret .= '<li>'.$this->contentConverter->convertTextContent($second).'</li>';
+                $ret .= $this->orderedListConverter->itemOpen().$this->contentConverter->convertTextContent($second).$this->orderedListConverter->itemClose();
                 $prev = LineType::OrderedList;
             } elseif ($first === '|' && (str_ends_with($second, '|') || str_ends_with($second, '|h'))) {
                 // 表
@@ -195,7 +200,7 @@ class TgwsMarkHtmlConverter
                 } elseif ($prev === LineType::UnorderedList) {
                     $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
-                    $ret .= '</ol>';
+                    $ret .= $this->orderedListConverter->close();
                 }
                 $ret .= $this->contentConverter->convertTextContent($next_tail.$raw_line.$raw_head);
                 $raw_line = '';
@@ -242,7 +247,7 @@ class TgwsMarkHtmlConverter
                 } elseif ($prev === LineType::UnorderedList) {
                     $ret .= $this->unorderedListConverter->close();
                 } elseif ($prev === LineType::OrderedList) {
-                    $ret .= '</ol>';
+                    $ret .= $this->orderedListConverter->close();
                 } elseif ($prev === LineType::Table) {
                     $ret .= '</table>';
                 } else {
@@ -268,7 +273,7 @@ class TgwsMarkHtmlConverter
         } elseif ($prev === LineType::UnorderedList) {
             $ret .= $this->unorderedListConverter->close();
         } elseif ($prev === LineType::OrderedList) {
-            $ret .= '</ol>';
+            $ret .= $this->orderedListConverter->close();
         } elseif ($prev === LineType::Table) {
             $ret .= '</table>';
         } elseif ($prev === LineType::CodeBlock) {

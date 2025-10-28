@@ -12,6 +12,7 @@ use Mifumi323\TgwsMark\MarkConverter\IHeadingConverter;
 use Mifumi323\TgwsMark\MarkConverter\IOrderedListConverter;
 use Mifumi323\TgwsMark\MarkConverter\IParagraphConverter;
 use Mifumi323\TgwsMark\MarkConverter\ITableConverter;
+use Mifumi323\TgwsMark\MarkConverter\IUnorderedListConverter;
 use Mifumi323\TgwsMark\MarkConverter\OrderedListHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\ParagraphHtmlConverter;
 use Mifumi323\TgwsMark\MarkConverter\TableHtmlConverter;
@@ -23,7 +24,7 @@ class TgwsMarkHtmlConverter
     public IHeadingConverter $headingConverter;
     public ICodeBlockConverter $codeBlockConverter;
     public IParagraphConverter $paragraphConverter;
-    public UnorderedListHtmlConverter $unorderedListConverter;
+    public IUnorderedListConverter $unorderedListConverter;
     public IOrderedListConverter $orderedListConverter;
     public ITableConverter $tableConverter;
 
@@ -32,7 +33,7 @@ class TgwsMarkHtmlConverter
         ?IHeadingConverter $headingConverter = null,
         ?ICodeBlockConverter $codeBlockConverter = null,
         ?IParagraphConverter $paragraphConverter = null,
-        ?UnorderedListHtmlConverter $unorderedListConverter = null,
+        ?IUnorderedListConverter $unorderedListConverter = null,
         ?IOrderedListConverter $orderedListConverter = null,
         ?ITableConverter $tableConverter = null,
     ) {
@@ -107,7 +108,7 @@ class TgwsMarkHtmlConverter
                 continue;
             }
             $isblank = false;
-                        if ($first === '*' || strlen($line_content) === 0) {
+            if ($first === '*' || strlen($line_content) === 0) {
                 // 見出し
                 if ($first === '*') {
                     // 見出しレベルを先に計算しておく

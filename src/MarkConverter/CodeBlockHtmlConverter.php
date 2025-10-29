@@ -20,7 +20,7 @@ class CodeBlockHtmlConverter implements ICodeBlockConverter
         if (strlen($language) > 0) {
             $ret .= ' class="language-'.htmlspecialchars($language).'"';
         }
-        $ret .= ">\n";
+        $ret .= '>';
 
         return $ret;
     }

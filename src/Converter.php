@@ -78,7 +78,10 @@ class Converter
                     continue;
                 } else {
                     // コードブロック内の行
-                    $raw_line .= $line."\n";
+                    if (strlen($raw_line) > 0) {
+                        $raw_line .= "\n";
+                    }
+                    $raw_line .= $line;
                     continue;
                 }
             } else {

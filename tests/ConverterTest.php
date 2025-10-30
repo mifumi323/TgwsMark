@@ -51,7 +51,7 @@ class ConverterTest extends \PHPUnit\Framework\TestCase
         $contentConverter = new ContentHtmlConverterSpecifyFunction(htmlspecialchars(...));
         $converter = new Converter(contentConverter: $contentConverter);
         $input = "*<h1>TEST</h1>#xxx\n<script>alert('XSS');</script>\n\n```\n<b>code</b>\n```\n| title=\"\">table|";
-        $expected = "<h2 id=\"xxx\">&lt;h1&gt;TEST&lt;/h1&gt;<a href=\"#xxx\" class=\"hashlink\" title=\"「TEST」の位置へのリンク\">#</a></h2><p>&lt;script&gt;alert(&#039;XSS&#039;);&lt;/script&gt;</p><pre><code>\n&lt;b&gt;code&lt;/b&gt;\n</code></pre><table><tr><td title=&quot;&quot;>table</td></tr></table>";
+        $expected = "<h2 id=\"xxx\">&lt;h1&gt;TEST&lt;/h1&gt;<a href=\"#xxx\" class=\"hashlink\" title=\"「TEST」の位置へのリンク\">#</a></h2><p>&lt;script&gt;alert(&#039;XSS&#039;);&lt;/script&gt;</p><pre><code>&lt;b&gt;code&lt;/b&gt;</code></pre><table><tr><td title=&quot;&quot;>table</td></tr></table>";
         $actual = $converter->convert($input);
         Assert::assertSame($expected, $actual);
     }

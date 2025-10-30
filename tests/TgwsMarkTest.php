@@ -106,20 +106,20 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
             ['*>#tatami', '<details></details>'], // リンク先となるsummaryがないためリンクも生成しない
 
             // コードブロック
-            ["```\ncode line1\ncode line2\n```", "<pre><code>\ncode line1\ncode line2\n</code></pre>"],
-            ["line1\n```\ncode line2\ncode line3\n```\nline4", "<p>line1</p><pre><code>\ncode line2\ncode line3\n</code></pre><p>line4</p>"],
-            ["line1\n```\ncode line2\n\ncode line3\n```\nline4", "<p>line1</p><pre><code>\ncode line2\n\ncode line3\n</code></pre><p>line4</p>"],
-            ["```\ncode line1\ncode line2", "<pre><code>\ncode line1\ncode line2\n</code></pre>"], // 閉じられない場合
-            ["```markdown\n# Heading\nprint('Hello, World!')\n```", "<pre><code class=\"language-markdown\">\n# Heading\nprint('Hello, World!')\n</code></pre>"], // 言語指定あり
-            ["```:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code>\ncode line1\ncode line2\n</code></pre>"], // ファイル名指定
-            ["```php:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code class=\"language-php\">\ncode line1\ncode line2\n</code></pre>"], // 言語＋ファイル名指定
-            ["````\ncode line1\n```\ncode block in code block\n```\ncode line2\n````", "<pre><code>\ncode line1\n```\ncode block in code block\n```\ncode line2\n</code></pre>"], // ネスト
-            ["*>summary\n```\ncode line1\ncode line2\n```", "<details><summary>summary</summary><pre><code>\ncode line1\ncode line2\n</code></pre></details>"], // 折り畳み内コードブロック
-            ["```\ncode line1\n````\ncode block in code block\n````\ncode line2\n```", "<pre><code>\ncode line1\n````\ncode block in code block\n````\ncode line2\n</code></pre>"], // ネスト逆
-            ["*>summary\n```\ncode line1\ncode line2", "<details><summary>summary</summary><pre><code>\ncode line1\ncode line2\n</code></pre></details>"], // 折り畳み内コードブロック（閉じられない場合）
-            ["|table|\n```\ncode line1\ncode line2\n```", "<table><tr><td>table</td></tr></table><pre><code>\ncode line1\ncode line2\n</code></pre>"], // 表終了後にコードブロック開始
-            ["-list item\n```\ncode line1\ncode line2\n```", "<ul><li>list item</li></ul><pre><code>\ncode line1\ncode line2\n</code></pre>"], // リスト終了後にコードブロック開始
-            ["+list item\n```\ncode line1\ncode line2\n```", "<ol><li>list item</li></ol><pre><code>\ncode line1\ncode line2\n</code></pre>"], // 番号付きリスト終了後にコードブロック開始
+            ["```\ncode line1\ncode line2\n```", "<pre><code>code line1\ncode line2</code></pre>"],
+            ["line1\n```\ncode line2\ncode line3\n```\nline4", "<p>line1</p><pre><code>code line2\ncode line3</code></pre><p>line4</p>"],
+            ["line1\n```\ncode line2\n\ncode line3\n```\nline4", "<p>line1</p><pre><code>code line2\n\ncode line3</code></pre><p>line4</p>"],
+            ["```\ncode line1\ncode line2", "<pre><code>code line1\ncode line2</code></pre>"], // 閉じられない場合
+            ["```markdown\n# Heading\nprint('Hello, World!')\n```", "<pre><code class=\"language-markdown\"># Heading\nprint('Hello, World!')</code></pre>"], // 言語指定あり
+            ["```:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code>code line1\ncode line2</code></pre>"], // ファイル名指定
+            ["```php:file.php\ncode line1\ncode line2\n```", "<pre title=\"file.php\"><code class=\"language-php\">code line1\ncode line2</code></pre>"], // 言語＋ファイル名指定
+            ["````\ncode line1\n```\ncode block in code block\n```\ncode line2\n````", "<pre><code>code line1\n```\ncode block in code block\n```\ncode line2</code></pre>"], // ネスト
+            ["*>summary\n```\ncode line1\ncode line2\n```", "<details><summary>summary</summary><pre><code>code line1\ncode line2</code></pre></details>"], // 折り畳み内コードブロック
+            ["```\ncode line1\n````\ncode block in code block\n````\ncode line2\n```", "<pre><code>code line1\n````\ncode block in code block\n````\ncode line2</code></pre>"], // ネスト逆
+            ["*>summary\n```\ncode line1\ncode line2", "<details><summary>summary</summary><pre><code>code line1\ncode line2</code></pre></details>"], // 折り畳み内コードブロック（閉じられない場合）
+            ["|table|\n```\ncode line1\ncode line2\n```", "<table><tr><td>table</td></tr></table><pre><code>code line1\ncode line2</code></pre>"], // 表終了後にコードブロック開始
+            ["-list item\n```\ncode line1\ncode line2\n```", "<ul><li>list item</li></ul><pre><code>code line1\ncode line2</code></pre>"], // リスト終了後にコードブロック開始
+            ["+list item\n```\ncode line1\ncode line2\n```", "<ol><li>list item</li></ol><pre><code>code line1\ncode line2</code></pre>"], // 番号付きリスト終了後にコードブロック開始
 
             // 改行コード
             ["line1\r\nline2", '<p>line1<br>line2</p>'],
@@ -159,7 +159,7 @@ class TgwsMarkTest extends \PHPUnit\Framework\TestCase
     public function testToHtmlWithHeadSpecifyFunction()
     {
         $input = "*<h1>TEST</h1>#xxx\n<script>alert('XSS');</script>\n\n```\n<b>code</b>\n```\n| title=\"\">table|";
-        $expected = "<h2 id=\"xxx\">&lt;h1&gt;TEST&lt;/h1&gt;<a href=\"#xxx\" class=\"hashlink\" title=\"「TEST」の位置へのリンク\">#</a></h2><p>&lt;script&gt;alert(&#039;XSS&#039;);&lt;/script&gt;</p><pre><code>\n&lt;b&gt;code&lt;/b&gt;\n</code></pre><table><tr><td title=&quot;&quot;>table</td></tr></table>";
+        $expected = "<h2 id=\"xxx\">&lt;h1&gt;TEST&lt;/h1&gt;<a href=\"#xxx\" class=\"hashlink\" title=\"「TEST」の位置へのリンク\">#</a></h2><p>&lt;script&gt;alert(&#039;XSS&#039;);&lt;/script&gt;</p><pre><code>&lt;b&gt;code&lt;/b&gt;</code></pre><table><tr><td title=&quot;&quot;>table</td></tr></table>";
         $actual = TgwsMark::toHtml($input, escape_function: htmlspecialchars(...));
         Assert::assertSame($expected, $actual);
     }
